@@ -94,6 +94,16 @@ GET http://localhost:8082/api/fields/{id}/quote?date=2026-11-02&start=17:00&end=
 
 Booking lấy đúng `amount` lưu vào cột `total_price`. Tuyệt đối không nhân chia lại.
 
+**`quote` cũng trả 400** khi khung giờ không hợp lệ, vì giờ mở cửa là dữ liệu của field-service:
+
+| Trường hợp | Mã | `message` |
+|---|---|---|
+| `end` không sau `start` | 400 | "Giờ kết thúc phải sau giờ bắt đầu" |
+| Ngoài giờ mở cửa 05:00–23:00 | 400 | "Cụm sân chỉ mở cửa từ 05:00 đến 23:00" |
+| Thiếu tham số `date` / `start` / `end` | 400 | "Thiếu tham số bắt buộc: end" |
+
+Booking **chuyển tiếp nguyên mã 400 và `message`** này cho khách, không tự kiểm tra giờ mở cửa — tránh viết lại luật nghiệp vụ của dịch vụ khác. Quy tắc R3 và R4 do field-service canh.
+
 **Ví dụ chuẩn để cả nhóm đối chiếu khi test:**
 
 | Sân | Khung giờ | Giờ thường | Giờ vàng | `amount` |
