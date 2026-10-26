@@ -1,0 +1,474 @@
+{
+  "info": {
+    "name": "Football Booking System - KT1",
+    "_postman_id": "f00tba11-b00c-4a51-9e2d-000000000001",
+    "description": "Bo kiem thu API he thong quan ly dat lich san bong da.\n\nThu tu chay: Health -> Auth -> Field -> Booking -> Payment -> Bao mat.\nBien {{token}}, {{tokenOwner}}, {{bookingId}}, {{paymentId}} duoc luu tu dong sau khi chay cac request tuong ung.\nBien {{bookingDate}} tu dong = hom nay + 7 ngay.\n\nChu so huu: Linh (booking) - Hung (field) - Nhat (payment) - Hoang (auth/bao mat).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Ngay dat san = hom nay + 7 ngay, de khong bao gio roi vao qua khu",
+          "const d = new Date();",
+          "d.setDate(d.getDate() + 7);",
+          "const iso = d.toISOString().substring(0, 10);",
+          "pm.collectionVariables.set('bookingDate', iso);",
+          "",
+          "// Ngay hom qua, dung cho ca kiem thu R5 (dat san ngay qua khu)",
+          "const y = new Date();",
+          "y.setDate(y.getDate() - 1);",
+          "pm.collectionVariables.set('pastDate', y.toISOString().substring(0, 10));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseAuth", "value": "http://localhost:8080" },
+    { "key": "baseBooking", "value": "http://localhost:8081" },
+    { "key": "baseField", "value": "http://localhost:8082" },
+    { "key": "basePayment", "value": "http://localhost:8083" },
+    { "key": "token", "value": "" },
+    { "key": "tokenOwner", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "paymentId", "value": "" },
+    { "key": "bookingDate", "value": "" },
+    { "key": "pastDate", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Health - kiem tra 4 dich vu dang chay",
+      "item": [
+        {
+          "name": "auth-service UP",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('auth-service 200', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseAuth}}/health" }
+        },
+        {
+          "name": "booking-service UP",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('booking-service 200', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseBooking}}/health" }
+        },
+        {
+          "name": "field-service UP",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('field-service 200', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/health" }
+        },
+        {
+          "name": "payment-service UP",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('payment-service 200', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{basePayment}}/health" }
+        }
+      ]
+    },
+
+    {
+      "name": "1. Auth - Hoang",
+      "item": [
+        {
+          "name": "Dang ky khach moi (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"khach01\",\n  \"password\": \"123456\",\n  \"fullName\": \"Le Van Cuong\",\n  \"phone\": \"0987654321\"\n}" },
+            "url": "{{baseAuth}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Dang nhap KHACH -> luu {{token}}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Dang nhap thanh cong 200', () => pm.response.to.have.status(200));",
+            "const b = pm.response.json();",
+            "if (b.token) { pm.collectionVariables.set('token', b.token); }",
+            "pm.test('Vai tro la CUSTOMER', () => pm.expect(b.role).to.eql('CUSTOMER'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"khach01\",\n  \"password\": \"123456\"\n}" },
+            "url": "{{baseAuth}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Dang nhap CHU SAN -> luu {{tokenOwner}}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Dang nhap thanh cong 200', () => pm.response.to.have.status(200));",
+            "const b = pm.response.json();",
+            "if (b.token) { pm.collectionVariables.set('tokenOwner', b.token); }",
+            "pm.test('Vai tro la OWNER', () => pm.expect(b.role).to.eql('OWNER'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"chusan\",\n  \"password\": \"123456\"\n}" },
+            "url": "{{baseAuth}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Sai mat khau (401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Sai mat khau tra 401', () => pm.response.to.have.status(401));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"khach01\",\n  \"password\": \"sai-mat-khau\"\n}" },
+            "url": "{{baseAuth}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Thong tin tai khoan tu token (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseAuth}}/api/auth/me"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "2. Field - Hung",
+      "item": [
+        {
+          "name": "Danh sach san (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));",
+            "pm.test('Co du 4 san mau', () => pm.expect(pm.response.json().length).to.eql(4));"
+          ] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields" }
+        },
+        {
+          "name": "Loc san 7 nguoi (200)",
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields?type=SAN_7" }
+        },
+        {
+          "name": "Chi tiet San so 2 (200)",
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields/2" }
+        },
+        {
+          "name": "E1 - San khong ton tai (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields/99" }
+        },
+        {
+          "name": "Bao gia 17:00-18:30 = 675.000 (gio vang)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));",
+            "pm.test('1.5h gio vang x 450k = 675000', () => pm.expect(pm.response.json().amount).to.eql(675000));"
+          ] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields/2/quote?date={{bookingDate}}&start=17:00&end=18:30" }
+        },
+        {
+          "name": "Bao gia 16:00-18:00 = 750.000 (1h thuong + 1h vang)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('300k + 450k = 750000', () => pm.expect(pm.response.json().amount).to.eql(750000));"
+          ] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields/2/quote?date={{bookingDate}}&start=16:00&end=18:00" }
+        },
+        {
+          "name": "Chu san bat bao tri San so 3 (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenOwner}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"MAINTENANCE\"\n}" },
+            "url": "{{baseField}}/api/fields/3/status"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "3. Booking - Linh",
+      "item": [
+        {
+          "name": "Dat San so 2 17:00-18:30 (201) -> luu {{bookingId}}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Tao thanh cong 201', () => pm.response.to.have.status(201));",
+            "const b = pm.response.json();",
+            "if (b.id) { pm.collectionVariables.set('bookingId', b.id); }",
+            "pm.test('Tien do field-service tinh = 675000', () => pm.expect(b.totalPrice).to.eql(675000));",
+            "pm.test('Trang thai ban dau PENDING', () => pm.expect(b.status).to.eql('PENDING'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 2,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"17:00\",\n  \"endTime\": \"18:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "R8 - Dat trung khung gio (409)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trung lich tra 409', () => pm.response.to.have.status(409));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 2,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"17:00\",\n  \"endTime\": \"18:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "R1 - Gio le 17:17 (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 2,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"17:17\",\n  \"endTime\": \"18:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "R2 - Da 4 tieng, qua gioi han 180 phut (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 1,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"12:00\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "R3 - Dat luc 04:00, ngoai gio mo cua (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 1,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"04:00\",\n  \"endTime\": \"05:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "R5 - Dat cho ngay hom qua (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('400', () => pm.response.to.have.status(400));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 1,\n  \"bookingDate\": \"{{pastDate}}\",\n  \"startTime\": \"17:00\",\n  \"endTime\": \"18:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "E1 - Dat san khong ton tai, fieldId=99 (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Booking chuyen tiep 404 tu field-service', () => pm.response.to.have.status(404));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 99,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"17:00\",\n  \"endTime\": \"18:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "E2 - Dat San so 3 dang bao tri (409)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('San bao tri tra 409', () => pm.response.to.have.status(409));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 3,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"19:00\",\n  \"endTime\": \"20:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "E3 - TAT field-service roi goi lai (503)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "// Truoc khi chay: Ctrl+C tat cua so dang chay field-service",
+            "pm.test('Dich vu dich chet -> 503 chu khong phai 500', () => pm.response.to.have.status(503));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fieldId\": 2,\n  \"bookingDate\": \"{{bookingDate}}\",\n  \"startTime\": \"20:00\",\n  \"endTime\": \"21:30\"\n}" },
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "Luot dat cua toi (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings/me"
+          }
+        },
+        {
+          "name": "Chi tiet luot dat (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Huy san (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings/{{bookingId}}/cancel"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "4. Payment - Nhat",
+      "item": [
+        {
+          "name": "Tao giao dich MOMO (201) -> luu {{paymentId}}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201', () => pm.response.to.have.status(201));",
+            "const b = pm.response.json();",
+            "if (b.id) { pm.collectionVariables.set('paymentId', b.id); }",
+            "pm.test('So tien lay tu API booking-service, khong tin client', () => pm.expect(b.amount).to.eql(675000));",
+            "pm.test('Trang thai ban dau INIT', () => pm.expect(b.status).to.eql('INIT'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"bookingId\": {{bookingId}},\n  \"method\": \"MOMO\"\n}" },
+            "url": "{{basePayment}}/api/payments"
+          }
+        },
+        {
+          "name": "Cong thanh toan bao thanh cong (200) -> booking chuyen PAID",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));",
+            "pm.test('Giao dich SUCCESS', () => pm.expect(pm.response.json().status).to.eql('SUCCESS'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{basePayment}}/api/payments/{{paymentId}}/confirm"
+          }
+        },
+        {
+          "name": "Tra cuu giao dich theo luot dat (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{basePayment}}/api/payments/booking/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Kiem chung: luot dat da chuyen PAID",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Booking da PAID', () => pm.expect(pm.response.json().status).to.eql('PAID'));"
+          ] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "Thanh toan cho luot dat khong ton tai (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('404', () => pm.response.to.have.status(404));"] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"bookingId\": 9999,\n  \"method\": \"MOMO\"\n}" },
+            "url": "{{basePayment}}/api/payments"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "5. Bao mat - Hoang + Linh (bat buoc co trong bao cao)",
+      "item": [
+        {
+          "name": "TC-S1 Chua dang nhap goi thong ke (401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Khong co token -> 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseBooking}}/api/bookings/statistics" }
+        },
+        {
+          "name": "TC-S2 KHACH goi thong ke doanh thu (403)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Da dang nhap nhung sai vai tro -> 403', () => pm.response.to.have.status(403));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings/statistics"
+          }
+        },
+        {
+          "name": "TC-S3 CHU SAN goi thong ke doanh thu (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Dung vai tro -> 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenOwner}}" }],
+            "url": "{{baseBooking}}/api/bookings/statistics"
+          }
+        },
+        {
+          "name": "TC-S4 KHACH xem toan bo luot dat (403)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('403', () => pm.response.to.have.status(403));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseBooking}}/api/bookings"
+          }
+        },
+        {
+          "name": "TC-S5 KHACH bat bao tri san (403)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('403', () => pm.response.to.have.status(403));"] } }],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"MAINTENANCE\"\n}" },
+            "url": "{{baseField}}/api/fields/1/status"
+          }
+        },
+        {
+          "name": "TC-S6 Token gia mao / sai chu ky (401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Token sai chu ky -> 401', () => pm.response.to.have.status(401));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWNrZXIiLCJyb2xlIjoiT1dORVIifQ.chu-ky-bia-dat" }],
+            "url": "{{baseBooking}}/api/bookings/statistics"
+          }
+        },
+        {
+          "name": "TC-S7 Xem danh sach san khong can dang nhap (200 - cong khai)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Endpoint cong khai van 200', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [], "url": "{{baseField}}/api/fields" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# Chuan hoa xuong dong: ca nhom dung Windows nhung Git luu LF,
+# tranh truong hop diff bao "thay doi toan bo file" khi khong sua gi.
+* text=auto eol=lf
+
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+*.jar    binary
+*.png    binary
+*.jpg    binary
+*.mp4    binary
+*.pdf    binary
+*.docx   binary

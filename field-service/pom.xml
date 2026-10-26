@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- field-service : cong 8082 - CHU SO HUU: HUNG
+         Trach nhiem: danh sach san bong, bang gia, gio vang, trang thai bao tri.
+         So huu toan bo du lieu ve san - dich vu khac muon biet gia phai GOI API. -->
+
+    <parent>
+        <groupId>com.football</groupId>
+        <artifactId>football-booking-system</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>field-service</artifactId>
+    <name>field-service</name>
+    <description>Dich vu quan ly san bong va bang gia</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.football</groupId>
+            <artifactId>common-security</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

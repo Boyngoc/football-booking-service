@@ -1,0 +1,38 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### VS Code ###
+.vscode/
+
+### Mac ###
+.DS_Store
+
+### CSDL H2 sinh ra khi chay (moi nguoi mot ban, khong commit) ###
+data/
+*.mv.db
+*.trace.db
+
+### Log ###
+*.log
+logs/
+
+### Maven ###
+!**/src/main/**/target/
+HELP.md

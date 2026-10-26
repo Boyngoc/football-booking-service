@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================
+         common-security  -  CHU SO HUU: HOANG
+         Thu vien dung chung, KHONG phai mot dich vu chay doc lap.
+         Chua: doc va xac minh JWT, nap thong tin nguoi dung vao
+         SecurityContext, quy tac tra ve 401 / 403.
+         4 service con lai deu phu thuoc module nay.
+         ============================================================ -->
+
+    <parent>
+        <groupId>com.football</groupId>
+        <artifactId>football-booking-system</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>common-security</artifactId>
+    <name>common-security</name>
+    <description>Thu vien JWT va phan quyen dung chung cho ca he thong</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!-- Co y KHONG khai bao spring-boot-maven-plugin:
+         day la thu vien, khong dong goi thanh ung dung chay duoc. -->
+</project>
