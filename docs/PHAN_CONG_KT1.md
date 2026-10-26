@@ -8,12 +8,17 @@
 
 ## 0. HIỆN TRẠNG & PHẠM VI CHỐT
 
+> **Nhóm đã quyết định xóa code buổi 1 và viết lại từ đầu cùng nhau.** Code cũ lưu ở tag git `buoi-1-goc`, lấy lại bất cứ lúc nào bằng `git checkout buoi-1-goc -- booking-service/src`. Lý do: thiết kế mới đổi gần hết (bỏ `customerName`/`phone` nhập tay, thay `fieldName` bằng `fieldId`, giá do field-service tính, `DELETE` thành `PUT /cancel`), và quan trọng hơn là để Linh tự viết thì mới giải thích được code của mình khi thầy yêu cầu sửa tham số tại chỗ.
+
 | Yêu cầu đề bài | Hiện trạng repo | Còn thiếu |
 |---|---|---|
-| Ý 1 — RESTful API (1,0đ) | ✅ `booking-service` có 10 endpoint, validation, 200/201/400/404 | Postman collection làm tài liệu API |
-| Ý 2 — Giao tiếp ≥ 2 dịch vụ (1,5đ) | ❌ Mới có **1** service | Service thứ 2+, RestTemplate, xử lý lỗi, sequence diagram |
-| Ý 3 — Lưu CSDL (1,5đ) | ❌ `List` trong RAM | Spring Data JPA, `@Entity`, MySQL, mỗi service 1 DB |
-| Ý 4 — JWT + phân quyền (2,0đ) | ❌ Chưa có | Auth Service, JWT, 2 vai trò, test 401/403 |
+| Ý 1 — RESTful API (1,0đ) | ⬜ 4 service mới có khung chạy được + `/health` | Toàn bộ endpoint nghiệp vụ, validation R1–R9 |
+| Ý 2 — Giao tiếp ≥ 2 dịch vụ (1,5đ) | ⬜ Đã chốt hợp đồng API, chưa viết client | `FieldClient`, `RestTemplate`, xử lý lỗi E1–E4, sequence diagram |
+| Ý 3 — Lưu CSDL (1,5đ) | 🟨 4 datasource tách biệt đã cấu hình (H2 + profile MySQL) | `@Entity`, `Repository`, seed dữ liệu, nghiệp vụ ghi/đọc |
+| Ý 4 — JWT + phân quyền (2,0đ) | 🟨 `common-security` có khung, đang để `mode=open` | `JwtService`, `JwtAuthFilter`, `SecurityConfig`, 2 vai trò |
+
+**Đã có sẵn làm nền:** 5 module Maven build xanh · 4 cổng 8080–8083 chạy độc lập · 4 CSDL tách biệt · hợp đồng API chốt trong `api-contract.md` · bộ Postman 40 request chờ API.
+**Phần thực nghiệm hiện ở mức 0/6,0** — repo mới có giàn giáo, chưa có nghiệp vụ.
 
 **Chốt phạm vi: 4 dịch vụ** (bỏ Customer / Schedule / Notification / Gateway, đưa vào "hướng phát triển" Chương 5).
 

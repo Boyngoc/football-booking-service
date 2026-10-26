@@ -204,6 +204,14 @@ Trả kết quả + mã HTTP cho Client
 
 ### B1.2. Cấu trúc mã nguồn
 
+> ⚠️ **Code buổi 1 đã được gỡ khỏi nhánh làm việc.** Khi chuẩn bị Bài kiểm tra số 1, nhóm thống nhất viết lại `booking-service` từ đầu cùng nhau vì thiết kế đổi gần hết: bỏ `customerName`/`phone` nhập tay (lấy từ JWT), thay `fieldName` bằng `fieldId`, giá do `field-service` tính thay vì client gửi lên, `DELETE` đổi thành `PUT /{id}/cancel`.
+>
+> Bản gốc buổi 1 vẫn còn nguyên trong git, lấy lại bằng:
+> ```bash
+> git checkout buoi-1-goc -- booking-service/src
+> ```
+> Phần mô tả dưới đây giữ lại làm nhật ký học tập của buổi 1.
+
 ```
 src/main/java/com/football/bookingservice/
 ├── BookingServiceApplication.java      # Điểm khởi động
