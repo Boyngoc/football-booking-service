@@ -31,6 +31,51 @@
 
 ---
 
+## 0b. KHO CODE & NHÁNH CỦA TỪNG NGƯỜI
+
+**Repo:** https://github.com/Boyngoc/football-booking-service
+
+| Nhánh | Người | Module được phép sửa | Cổng |
+|---|---|---|---|
+| `feat/hoang-auth-service` | Hoàng | `auth-service/` + `common-security/` | 8080 |
+| `feat/linh-booking-service` | Linh | `booking-service/` | 8081 |
+| `feat/hung-field-service` | Hùng | `field-service/` | 8082 |
+| `feat/nhat-payment-service` | Nhật | `payment-service/` | 8083 |
+
+Ngoài ra có `main` (bản chốt, khóa) và `develop` (nhánh tích hợp — mọi Pull Request merge vào đây).
+
+**Bắt đầu làm việc:**
+
+```bash
+git clone https://github.com/Boyngoc/football-booking-service.git
+cd football-booking-service
+mvn clean install -DskipTests
+git checkout feat/linh-booking-service      # đổi thành nhánh của mình
+```
+
+Nhánh đã có sẵn trên GitHub nên `git checkout` là bám theo luôn, không cần `-b`.
+
+**Chạy thử (mỗi service một cửa sổ terminal):**
+
+```bash
+cd auth-service    && mvn spring-boot:run     # 8080
+cd booking-service && mvn spring-boot:run     # 8081
+cd field-service   && mvn spring-boot:run     # 8082
+cd payment-service && mvn spring-boot:run     # 8083
+```
+
+Kiểm tra sống: `curl http://localhost:8082/health`. **Chưa cần cài MySQL** — mặc định dùng H2 ghi ra file.
+
+**Nộp việc:**
+
+```bash
+git add . && git commit -m "feat: ..." && git push
+```
+
+Rồi mở Pull Request trên GitHub nhắm vào `develop`, Hoàng review và merge.
+
+---
+
 ## 1. NGHIỆP VỤ LÕI — "ĐẶT MỘT SÂN BÓNG"
 
 Đây là nghiệp vụ xuyên suốt cả 4 service, dùng chung cho báo cáo, demo và video của cả nhóm.
@@ -56,7 +101,7 @@ Khách (CUSTOMER) muốn đặt Sân số 2 (sân 7 người), ngày 02/11/2026,
         |-- [6] INSERT bookings (status = PENDING, total_price = 675000)
         v
  [7] payment-service: POST /api/payments { bookingId: 12, method: "MOMO" }
-        |-- [8] GET http://localhost:8081/api/bookings/12  -> lấy số tiền thật (KHÔNG tự tin client)
+        |-- [8] GET http://localhost:8081/api/bookings/12  -> lấy số tiền thật (KHÔNG tin số tiền client gửi)
         |-- [9] INSERT payments (status = INIT, txnRef = "FB1762...")
         v
  [10] POST /api/payments/9/confirm  (giả lập cổng MoMo báo thành công)
@@ -150,7 +195,7 @@ Khách (CUSTOMER) muốn đặt Sân số 2 (sân 7 người), ngày 02/11/2026,
 ### 🟢 LINH — `booking-service` · RESTful API đặt sân (2,4đ)
 
 **Code**
-- Refactor từ code buổi 1: tách `BookingRequest` / `BookingResponse`, không trả Entity thô
+- Viết mới từ đầu: tách `BookingRequest` / `BookingResponse`, không trả Entity thô ra ngoài
 - Entity `Booking`: `id`, `customerUsername` (lấy từ JWT, **không** nhận từ client), `fieldId`, `fieldName`, `bookingDate`, `startTime`, `endTime`, `totalPrice`, `status`, `createdAt`
 - Bỏ field `customerName` / `phone` nhập tay — lấy từ token, tránh khách giả danh người khác
 - API đầy đủ:
@@ -351,7 +396,7 @@ Khác với video cá nhân (đi sâu từng phần), demo trước lớp chạy
 
 | Ngày | Hoàng | Linh | Hùng | Nhật |
 |---|---|---|---|---|
-| D1 27/10 | Chốt kiến trúc, repo đa module, chia nhánh git | Refactor DTO, bỏ `customerName` nhập tay | Dựng `field-service` + entity `Field` | Thêm JPA + MySQL cho Booking |
+| D1 27/10 | ✅ *(đã xong)* kiến trúc, repo đa module, nhánh git, hợp đồng API, bộ Postman | Viết `Booking` @Entity + 2 DTO, bỏ `customerName` nhập tay | Dựng `field-service` + entity `Field` | Thêm JPA + MySQL cho Booking |
 | D2 28/10 | `auth-service`, login trả JWT | Cài R1–R5 validation | Seed 4 sân, API `quote` tính giờ vàng | `payment-service` + entity `Payment` |
 | D3 29/10 | `JwtAuthFilter` dùng chung, giao cho 3 bạn | Hoàn thiện Postman collection + `@PreAuthorize` | Booking → Field qua `RestTemplate` | Tách 4 DB, Payment gọi API Booking |
 | D4 30/10 | Ma trận phân quyền, test 401/403 | R8 chống trùng lịch + R9 hủy sân | 4 tình huống lỗi E1–E4 | Luồng confirm → đổi booking sang PAID |
@@ -363,9 +408,9 @@ Khác với video cá nhân (đi sâu từng phần), demo trước lớp chạy
 
 ## 7. QUY TẮC LÀM VIỆC
 
-1. **Git:** mỗi người nhánh `feat/<ten>-<service>`, merge vào `develop` qua Pull Request, Hoàng review.
-2. **Không sửa code của người khác** — phát hiện lỗi thì báo chủ service.
-3. **Chốt hợp đồng API ngay D1** vào `docs/api-contract.md`: Hùng chốt format `quote` với Linh, Nhật chốt format `PUT /status` với Linh. Sai format giữa 2 service là lỗi tốn thời gian nhất.
+1. **Git:** mỗi người một nhánh đã tạo sẵn ở mục 0b, merge vào `develop` qua Pull Request, Hoàng review. Không ai push thẳng vào `main`.
+2. **Không sửa code của người khác** — phát hiện lỗi thì báo chủ service. Riêng `pom.xml` cha và `common-security/` là của Hoàng: cần thêm thư viện thì báo Hoàng thêm, đừng tự sửa, vì cả 4 service cùng phụ thuộc hai thứ đó.
+3. **Đọc `docs/api-contract.md` TRƯỚC KHI viết dòng code đầu tiên.** File đó đã chốt sẵn format JSON giữa Booking↔Field và Payment↔Booking, bảng ánh xạ lỗi, và 7 câu dễ cãi nhau. Sai format giữa 2 service là lỗi tốn thời gian nhất.
 4. **Dùng chung bộ dữ liệu mẫu ở mục 1** — 4 sân, 2 tài khoản, giờ vàng 17:00–21:00. Tuyệt đối không ai tự chế dữ liệu riêng, nếu không video 4 người sẽ mâu thuẫn số liệu.
 5. **Deadline nội bộ sớm hơn 1 ngày** — D6 phải chạy được end-to-end mới quay video.
 6. **Minh chứng là bắt buộc:** phần nào chưa xong thì ghi rõ ở Chương 5 mục "Hạn chế" và nói trong video; đề bài nêu rõ thầy chấm theo mức độ đáp ứng thực tế.
